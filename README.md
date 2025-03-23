@@ -4,7 +4,7 @@ Ever felt like choosing courses is more confusing than explaining TikTok to your
 
 ## 🔭 What is ClarkGuide?
 
-StarGuide transforms Clark University's course catalog from a boring list of numbers into an interactive cosmic journey. Think "NASA meets academic advising" - but without the $10 billion budget or the freeze-dried ice cream.
+ClarkGuide transforms Clark University's course catalog from a boring list of numbers into an interactive cosmic journey. Think "NASA meets academic advising" - but without the $10 billion budget or the freeze-dried ice cream.
 
 > "It's like having Neil deGrasse Tyson as your academic advisor, but without the constant reminders that we're all made of star stuff." - Definitely a real student quote
 
