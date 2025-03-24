@@ -1,6 +1,6 @@
 # Clark University AI Chatbox
 
-An AI-powered chatbot designed to provide information and services to Clark University students, faculty, and visitors.
+An AI-powered chatbot designed to provide information and services to Clark University students, faculty, and visitors. This application uses real AI processing via OpenAI's GPT-3.5 Turbo to provide accurate and contextual responses.
 
 ## Features
 
@@ -32,7 +32,7 @@ An AI-powered chatbot designed to provide information and services to Clark Univ
 ### Backend
 - Node.js with Express
 - TypeScript
-- MongoDB for data storage
+- SQLite for data storage (simplified from MongoDB)
 - OpenAI API for natural language processing
 - Socket.io for real-time chat
 
@@ -67,7 +67,6 @@ clark-chatbox/
 
 ### Prerequisites
 - Node.js (v16 or higher)
-- MongoDB (local or Atlas)
 - OpenAI API key
 
 ### Installation
@@ -87,7 +86,6 @@ npm install
 3. Create a `.env` file in the backend directory with the following variables:
 ```
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/clark-chatbox
 FRONTEND_URL=http://localhost:3000
 OPENAI_API_KEY=your_openai_api_key
 JWT_SECRET=your_jwt_secret
@@ -97,6 +95,11 @@ JWT_SECRET=your_jwt_secret
 ```
 cd ../frontend
 npm install
+```
+
+5. Create a `.env` file in the frontend directory with:
+```
+REACT_APP_BACKEND_URL=http://localhost:5000
 ```
 
 ### Running the Application
@@ -115,6 +118,28 @@ npm start
 
 3. Open your browser and navigate to `http://localhost:3000`
 
+4. Use the ChatWidget in the bottom-right corner to interact with the AI
+
+### Demo Mode
+
+For hackathon presentations or when you don't want to use the OpenAI API, you can use the built-in Demo Mode:
+
+1. Comment out the `OPENAI_API_KEY` line in your backend `.env` file
+2. Restart the backend server
+3. The system will automatically use pre-defined responses for common queries
+
+For a list of supported demo questions and more details, see the [DEMO_MODE.md](DEMO_MODE.md) file.
+
+### AI Features
+
+The chatbox is now fully connected to the OpenAI-powered backend. Features include:
+
+- Real AI responses using GPT-3.5 Turbo
+- Persistent chat history using SQLite database
+- User identification to maintain conversation context
+- Intent recognition to categorize queries
+- Different AI responses based on user type (student/faculty/other)
+
 ## Development Roadmap
 
 ### Phase 1: Foundation
@@ -128,17 +153,17 @@ npm start
 - Other services module
 - AI integration
 
-### Phase 3: Integration & Enhancement
+### Phase 3: Integration & Enhancement ✓
 - Connect modules with knowledge base
 - Implement context awareness
-- Add authentication (if needed)
-- Testing
+- Add persistent conversation storage with SQLite
+- Real-time communication with Socket.io
 
-### Phase 4: Polish & Presentation
-- Improve UI/UX
-- Add analytics and feedback collection
-- Final testing and bug fixes
-- Demo preparation
+### Phase 4: Polish & Presentation ✓
+- Improved UI/UX with modern design
+- Loading indicators and error handling
+- Connection status monitoring
+- Live demo preparation
 
 ## Hackathon Project
 

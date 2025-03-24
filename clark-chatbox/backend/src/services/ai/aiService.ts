@@ -1,9 +1,28 @@
-import { OpenAI } from 'openai';
+import mockAiService from './mockAiService';
+import claudeService from './claudeService';
 
-// Load OpenAI API key from environment variables
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Determine which AI service to use
+let useClaude = false;
+
+try {
+  // Check if we should use Claude
+  if (process.env.OPENAI_API_KEY) {
+    console.log('Claude API initialized with API key');
+    useClaude = true;
+  } else {
+    console.warn('No API key found, using Mock AI Service as fallback');
+  }
+} catch (error) {
+  console.error('Error initializing AI services:', error);
+  console.warn('Using Mock AI Service as fallback');
+}
+
+// Log which service is active for clarity
+if (useClaude) {
+  console.log('PRIMARY AI SERVICE: Claude');
+} else {
+  console.log('PRIMARY AI SERVICE: Mock Service (fallback)');
+}
 
 // Define message interface
 export interface Message {
@@ -16,6 +35,7 @@ export interface UserQuery {
   userId?: string;
   userType?: 'student' | 'faculty' | 'other';
   sessionId?: string;
+  userEmail?: string;
 }
 
 export interface AIResponse {
@@ -60,88 +80,39 @@ export class AIService {
 
   // Process user message and determine intent and response
   async processMessage(query: UserQuery): Promise<AIResponse> {
+    console.log(`Received query: "${query.text}" from ${query.userType || 'unknown'} user`);
+    
     try {
-      // Prepare conversation for OpenAI
-      const messages: Message[] = [
-        { role: 'system', content: this.systemPrompt },
-        { role: 'user', content: query.text }
-      ];
-
-      // Generate response from OpenAI
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages,
-        temperature: 0.7,
-        max_tokens: 500,
-        tools: [
-          {
-            type: 'function',
-            function: {
-              name: 'categorize_query',
-              description: 'Categorize the user query and extract intent',
-              parameters: {
-                type: 'object',
-                properties: {
-                  intent: {
-                    type: 'string',
-                    description: 'The specific intent of the user query (e.g., course_info, library_hours, onecard_lost)'
-                  },
-                  category: {
-                    type: 'string',
-                    enum: ['student', 'faculty', 'other'],
-                    description: 'The main category the query belongs to'
-                  },
-                  subcategory: {
-                    type: 'string',
-                    description: 'The specific subcategory (e.g., courses, campus_resources, credentials)'
-                  },
-                  confidence: {
-                    type: 'number',
-                    description: 'Confidence score from 0 to 1 for this categorization'
-                  }
-                },
-                required: ['intent', 'category', 'confidence']
-              }
-            }
-          }
-        ],
-        tool_choice: 'auto'
-      });
-
-      // Extract the tool call result and the assistant's response
-      const responseMessage = completion.choices[0].message;
-      const toolCall = responseMessage.tool_calls?.[0];
-      
-      let intent = 'general_inquiry';
-      let category = query.userType || 'student';
-      let subcategory = undefined;
-      let confidence = 0.7;
-      
-      // Parse the tool call result if it exists
-      if (toolCall && toolCall.function.name === 'categorize_query') {
-        const toolCallResult = JSON.parse(toolCall.function.arguments);
-        intent = toolCallResult.intent;
-        category = toolCallResult.category;
-        subcategory = toolCallResult.subcategory;
-        confidence = toolCallResult.confidence;
+      // Try Claude if enabled - with proper error handling
+      if (useClaude) {
+        console.log('Using Claude AI Service for query');
+        try {
+          const claudeResponse = await claudeService.processMessage(query);
+          console.log('Claude response successful');
+          return claudeResponse;
+        } catch (claudeError) {
+          console.error('Claude API error:', claudeError);
+          console.log('Falling back to mock service after Claude error');
+          // Fall through to mock service below
+        }
       }
-
-      // Return the response and metadata
-      return {
-        text: responseMessage.content || "I'm sorry, I couldn't process that request.",
-        intent,
-        category: category as 'student' | 'faculty' | 'other',
-        subcategory,
-        confidence,
-        sources: [] // In a real implementation, this would include knowledge base sources
-      };
     } catch (error) {
-      console.error('Error processing message with AI:', error);
+      console.error('Error processing message with Claude:', error);
+    }
+    
+    // Fallback to mock service
+    console.log('Using Mock AI Service (fallback) for query');
+    try {
+      return await mockAiService.processMessage(query);
+    } catch (mockError) {
+      console.error('Even mock service failed:', mockError);
+      // Return a basic error response as absolute fallback
       return {
-        text: "I'm sorry, I encountered an error processing your request. Please try again later.",
+        text: "I'm sorry, I encountered a server error. Please try again later.",
         intent: 'error',
-        category: 'other',
-        confidence: 0
+        category: query.userType as 'student' | 'faculty' | 'other' || 'student',
+        confidence: 0,
+        sources: ['Error Handler']
       };
     }
   }
